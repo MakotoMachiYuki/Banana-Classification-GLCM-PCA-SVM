@@ -10,14 +10,14 @@ variance = 0.91;
 %Jika sudah remove, bisa di comment saja function background removalnya
 timeStart = tic;
 disp("Background Removal...");
-BackgroundRemoval(maximumGambarPerKelas);
+%BackgroundRemoval(maximumGambarPerKelas);
 timeEnd = toc(timeStart);
 disp("Waktu Background Removal: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 
 % GLCM
 timeStart = tic;
 disp("GLCM...");
-GLCM(splitMargin, maximumGambarPerKelas);
+%GLCM(splitMargin, maximumGambarPerKelas);
 timeEnd = toc(timeStart);
 disp("GLCM Selesai");
 disp("Waktu Extrasi GLCM: " + string(seconds(timeEnd)), 'mm:ss.SSS');
@@ -34,6 +34,7 @@ disp("Waktu Reduksi PCA: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 % SVM
 timeStart = tic;
 disp("SVM...");
+%SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
 SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
 timeEnd = toc(timeStart);
 disp("SVM Selesai");

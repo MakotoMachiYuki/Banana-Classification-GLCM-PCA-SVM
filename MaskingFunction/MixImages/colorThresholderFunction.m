@@ -1,8 +1,8 @@
 clear; clc;
 
-folder = "";
-file = "banana_ripe.png"
 
-img = imread(fullfile(append(folder,file)));
+file = "banana_ripe.png";
+
+img = imread(file);
 
 colorThresholder(img);

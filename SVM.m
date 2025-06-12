@@ -1,61 +1,114 @@
 function SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika)
-    % Template SVM dengan Gaussian (RBF) kernel
-    t = templateSVM('KernelFunction', 'rbf', 'Standardize', true);
 
-    %classNames = {'overripe', 'ripe', 'rotten', 'unripe'};
+sigma = 1.0;
+C = 1.0;
+maxIter = 100;
+lr = 0.01;
 
-    % --- SVM tanpa PCA ---
-    SVMModel_noPCA = fitcecoc(DataTrain_STD, labelTrain_Numerika, 'Learners', t);
-    CVSVM_noPCA = crossval(SVMModel_noPCA, 'KFold', 5);
-    loss_noPCA = kfoldLoss(CVSVM_noPCA);
-    accuracy_noPCA = (1 - loss_noPCA) * 100;
-    disp(['Akurasi Training SVM tanpa PCA (RBF): ', num2str(accuracy_noPCA, '%.2f'), '%']);
+% Train
+[models, classList] = SVM_Training(DataTrain_STD, labelTrain_Numerika, sigma, C, maxIter, lr);
 
-    % --- SVM dengan PCA ---
-    SVMModel_PCA = fitcecoc(PCA_TRAIN_HASIL, labelTrain_Numerika, 'Learners', t);
-    CVSVM_PCA = crossval(SVMModel_PCA, 'KFold', 5);
-    loss_PCA = kfoldLoss(CVSVM_PCA);
-    accuracy_PCA = (1 - loss_PCA) * 100;
-    disp(['Akurasi Training SVM dengan PCA (RBF): ', num2str(accuracy_PCA, '%.2f'), '%']);
+% Klassifikasi
+classification = SVM_Classification(models, DataTest_STD, classList);
 
-    
+% Evaluate
+akurasi = sum(classification == labelTest_Numerika) / length(labelTest_Numerika) * 100;
+disp(['Test Accuracy: ', num2str(akurasi, '%.2f'), '%']);
 
-    % --- Testing tanpa PCA ---
-    ypred_noPCA = predict(SVMModel_noPCA, DataTest_STD);   
-    akurasi_noPCA = sum(ypred_noPCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM tanpa PCA (RBF): ', num2str(akurasi_noPCA, '%.2f'), '%']);
-    
- %   predictedLabelsText = classNames(ypred_noPCA);
- %   disp(table(predictedLabelsText(:), classNames(labelTest_Numerika(:)), ...
- %   'VariableNames', {'Predicted', 'Actual'}));
-
-
-    % --- Testing dengan PCA ---
-    ypred_PCA = predict(SVMModel_PCA, PCA_TEST_HASIL);
-    akurasi_PCA = sum(ypred_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM dengan PCA (RBF): ', num2str(akurasi_PCA, '%.2f'), '%']);
-
-    % --- Confusion Matrix ---
-    figure('Name', 'Confusion Matrix - SVM tanpa PCA');
-    confusionchart(labelTest_Numerika, ypred_noPCA, ...
-        'Title', 'SVM tanpa PCA (RBF)', ...
-        'RowSummary', 'row-normalized', ...
-        'ColumnSummary', 'column-normalized');
-
-    figure('Name', 'Confusion Matrix - SVM dengan PCA');
-    confusionchart(labelTest_Numerika, ypred_PCA, ...
-        'Title', 'SVM dengan PCA (RBF)', ...
-        'RowSummary', 'row-normalized', ...
-        'ColumnSummary', 'column-normalized');
-
-    % --- Bar Chart Akurasi ---
-    figure('Name', 'Perbandingan Akurasi SVM');
-    bar([accuracy_noPCA, accuracy_PCA; akurasi_noPCA, akurasi_PCA]);
-    title('Perbandingan Akurasi SVM');
-    xlabel('Skenario');
-    ylabel('Akurasi (%)');
-    xticklabels({'Train', 'Test'});
-    legend({'Tanpa PCA', 'Dengan PCA'}, 'Location', 'northwest');
-    ylim([0 100]);
-    grid on;
+% Confusion matrix
+figure;
+confusionchart(labelTest_Numerika, classification, ...
+    'Title', 'Confusion Matrix - Custom One-vs-All SVM', ...
+    'RowSummary', 'row-normalized', ...
+    'ColumnSummary', 'column-normalized');
 end
+%% Model One Vs All SVM
+function [models, classList] = SVM_Training(X, Y, sigma, C, maxIter, lr)
+% X: Fitur dari training    
+% Y: Numerikal Label
+% sigma: Parameter Gaussian kernel
+% C: Parameter Regulasi
+% maxIter: Maksimum iterasi
+% lr: Learning Rate
+
+classList = unique(Y);
+numClasses = length(classList);
+numTrain = size(X, 1);
+
+models = cell(numClasses, 1)
+
+%Precompute kernel matrix
+K = Kernel_Gaussian(X, X, sigma);
+
+for i = 1:numClasses
+    fprintf('Training Class %d vs all\n', classList(i));
+    
+    %Label binary untuk One-vs-All
+    y_binary = double(Y == classList(i));
+    y_binary(y_binary == 0) = -1;
+
+    %Initialisasi alpha
+    alpha = zeros(numTrain, 1);
+
+    % Gradient ascent untuk dual formulation
+    for iter = 1:maxIter
+        for j = 1:numTrain
+            f = sum(alpha .* y_binary .* K(:, j));
+            alpha(j) = alpha(j) + lr * (1 - y_binary(j) * f);
+            alpha(j) = min(max(alpha(j), 0), C);
+        end
+    end
+    
+    %Hitung bias
+    supportIndex = find(alpha > 1e-4);
+    b = mean(y_binary(supportIndex) - K(supportIndex, :) * (alpha .* y_binary));
+
+    %Menyimpan model
+    models{i} = struct('alpha', alpha, ...
+                        'b', b, ...
+                        'y', y_binary, ...
+                        'X', X, ...
+                        'sigma', sigma);
+end
+
+end
+
+%% Klassifikasi SVM
+function classification = SVM_Classification(models, Xtest, classlist)
+% models: model yang dihasilkan dari SVM_Training
+% XTest: fitur test
+% ClassList: Label kelas
+
+numClasses = length(models);
+numTest = size(Xtest, 1);
+scores = zeros(numTest, numClasses);
+
+    for i = 1:numClasses
+        model = models{i}
+        K_test = Kernel_Gaussian(Xtest, model.X, model.sigma);
+        scores(:, i) = K_test * (model.alpha .* model.y) + model.b;
+    end
+
+    [~, maxIndex] = max(scores, [], 2);
+    classification = classlist(maxIndex);
+end
+
+
+%% RBF Gaussian Kernel
+function K = Kernel_Gaussian(X1, X2, sigma)
+    n1 = size(X1, 1);
+    n2 = size(X2, 1);
+    K = zeros(n1, n2);
+    factor = 1 / (2 * sigma^2)
+
+    for i = 1:n1
+        for j = 1:n2
+            diff = X1(i, :) - X2(j, :);
+            K(i, j) = exp(-factor * (diff * diff'));
+        end
+
+    end
+end
+
+
+

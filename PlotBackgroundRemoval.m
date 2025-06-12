@@ -23,7 +23,7 @@ for i = 1:numel(kelasFolder)
     %Inisialisasi masing-masing path folder dan gambar
     kelas = kelasFolder{i};
     folderInput = fullfile(folderOriginal, kelas);     
-    folderOutput = fullfile(folderOutput, kelas);
+    kelasFolderOutput = fullfile(folderOutput, kelas);
     mkdir(kelasFolderOutput);
     
     %Inisialisasi gambar dari folder yang diinput per kelas dan maximum
