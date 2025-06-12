@@ -34,8 +34,13 @@ disp("Waktu Reduksi PCA: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 % SVM
 timeStart = tic;
 disp("SVM...");
-%SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
+
+SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
+
+disp("---------------------------------------------------------------")
+
 SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
+
 timeEnd = toc(timeStart);
 disp("SVM Selesai");
 disp("Waktu SVM: " + string(seconds(timeEnd)), 'mm:ss.SSS');

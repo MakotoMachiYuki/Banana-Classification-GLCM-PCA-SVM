@@ -1,27 +1,65 @@
 function SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika)
+    % Hyperparameters
+    sigma = 1.0;
+    C = 1.0;
+    maxIter = 100;
+    lr = 0.01;
 
-sigma = 1.0;
-C = 1.0;
-maxIter = 100;
-lr = 0.01;
+    % Class labels
+    classNames = {'overripe', 'ripe', 'rotten', 'unripe'};
 
-% Train
-[models, classList] = SVM_Training(DataTrain_STD, labelTrain_Numerika, sigma, C, maxIter, lr);
 
-% Klassifikasi
-classification = SVM_Classification(models, DataTest_STD, classList);
+% --- Training Accuracy (tanpa PCA)
+[models_noPCA, classList] = SVM_Training(DataTrain_STD, labelTrain_Numerika, sigma, C, maxIter, lr);
+predTrain_noPCA = SVM_Classification(models_noPCA, DataTrain_STD, classList);
+accTrain_noPCA = sum(predTrain_noPCA == labelTrain_Numerika) / length(labelTrain_Numerika) * 100;
+disp(['Akurasi Training SVM Kustom tanpa PCA (RBF): ', num2str(accTrain_noPCA, '%.2f'), '%']);
 
-% Evaluate
-akurasi = sum(classification == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-disp(['Test Accuracy: ', num2str(akurasi, '%.2f'), '%']);
+% --- Test Accuracy (tanpa PCA)
+predTest_noPCA = SVM_Classification(models_noPCA, DataTest_STD, classList);
+accTest_noPCA = sum(predTest_noPCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
+disp(['Akurasi Test SVM Kustom tanpa PCA (RBF): ', num2str(accTest_noPCA, '%.2f'), '%']);
 
-% Confusion matrix
-figure;
-confusionchart(labelTest_Numerika, classification, ...
-    'Title', 'Confusion Matrix - Custom One-vs-All SVM', ...
-    'RowSummary', 'row-normalized', ...
-    'ColumnSummary', 'column-normalized');
+% --- Training Accuracy (dengan PCA)
+[models_PCA, classList] = SVM_Training(PCA_TRAIN_HASIL, labelTrain_Numerika, sigma, C, maxIter, lr);
+predTrain_PCA = SVM_Classification(models_PCA, PCA_TRAIN_HASIL, classList);
+accTrain_PCA = sum(predTrain_PCA == labelTrain_Numerika) / length(labelTrain_Numerika) * 100;
+disp(['Akurasi Training SVM Kustom dengan PCA (RBF): ', num2str(accTrain_PCA, '%.2f'), '%']);
+
+% --- Test Accuracy (dengan PCA)
+predTest_PCA = SVM_Classification(models_PCA, PCA_TEST_HASIL, classList);
+accTest_PCA = sum(predTest_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
+disp(['Akurasi Test SVM Kustom dengan PCA (RBF): ', num2str(accTest_PCA, '%.2f'), '%']);
+
+
+    labelCat = categorical(labelTest_Numerika, 1:numel(classNames), classNames);
+    predCat_noPCA = categorical(predTest_noPCA, 1:numel(classNames), classNames);
+    predCat_PCA   = categorical(predTest_PCA,   1:numel(classNames), classNames);
+    
+    %Confusion matrix
+    figure('Name', 'Confusion Matrix - Custom SVM tanpa PCA');
+    confusionchart(labelCat, predCat_noPCA, ...
+        'Title', 'Custom SVM tanpa PCA', ...
+        'RowSummary', 'row-normalized', ...
+        'ColumnSummary', 'column-normalized');
+
+    figure('Name', 'Confusion Matrix - Custom SVM dengan PCA');
+    confusionchart(labelCat, predCat_PCA, ...
+        'Title', 'Custom SVM dengan PCA', ...
+        'RowSummary', 'row-normalized', ...
+        'ColumnSummary', 'column-normalized');
+
+    figure('Name', 'Perbandingan Akurasi SVM Kustom');
+    bar([accTrain_noPCA, accTrain_PCA; accTest_noPCA, accTest_PCA]);
+    title('Perbandingan Akurasi SVM');
+    xlabel('Skenario');
+    ylabel('Akurasi (%)');
+    xticklabels({'Train', 'Test'});
+    legend({'Tanpa PCA', 'Dengan PCA'}, 'Location', 'northwest');
+    ylim([0 100]);
+    grid on;
 end
+
 %% Model One Vs All SVM
 function [models, classList] = SVM_Training(X, Y, sigma, C, maxIter, lr)
 % X: Fitur dari training    
@@ -35,14 +73,12 @@ classList = unique(Y);
 numClasses = length(classList);
 numTrain = size(X, 1);
 
-models = cell(numClasses, 1)
+models = cell(numClasses, 1);
 
 %Precompute kernel matrix
 K = Kernel_Gaussian(X, X, sigma);
 
 for i = 1:numClasses
-    fprintf('Training Class %d vs all\n', classList(i));
-    
     %Label binary untuk One-vs-All
     y_binary = double(Y == classList(i));
     y_binary(y_binary == 0) = -1;
@@ -84,7 +120,7 @@ numTest = size(Xtest, 1);
 scores = zeros(numTest, numClasses);
 
     for i = 1:numClasses
-        model = models{i}
+        model = models{i};
         K_test = Kernel_Gaussian(Xtest, model.X, model.sigma);
         scores(:, i) = K_test * (model.alpha .* model.y) + model.b;
     end
@@ -99,7 +135,7 @@ function K = Kernel_Gaussian(X1, X2, sigma)
     n1 = size(X1, 1);
     n2 = size(X2, 1);
     K = zeros(n1, n2);
-    factor = 1 / (2 * sigma^2)
+    factor = 1 / (2 * sigma^2);
 
     for i = 1:n1
         for j = 1:n2
