@@ -35,7 +35,7 @@ function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASI
     %Testing tanpa PCA
     ypred_noPCA = predict(SVMModel_noPCA, DataTest_STD);   
     akurasi_noPCA = sum(ypred_noPCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM_BuiltIn tanpa PCA (RBF): ', num2str(akurasi_noPCA, '%.2f'), '%']);
+    disp(['Akurasi Test SVM BuiltIn tanpa PCA (RBF): ', num2str(akurasi_noPCA, '%.2f'), '%']);
     
  %   predictedLabelsText = classNames(ypred_noPCA);
  %   disp(table(predictedLabelsText(:), classNames(labelTest_Numerika(:)), ...
@@ -45,7 +45,7 @@ function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASI
     %Testing dengan PCA
     ypred_PCA = predict(SVMModel_PCA, PCA_TEST_HASIL);
     akurasi_PCA = sum(ypred_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM_BuiltIn dengan PCA (RBF): ', num2str(akurasi_PCA, '%.2f'), '%']);
+    disp(['Akurasi Test SVM BuiltIn dengan PCA (RBF): ', num2str(akurasi_PCA, '%.2f'), '%']);
     
     
     %Label untuk confusion matrix
@@ -56,21 +56,21 @@ function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASI
     %Confusion Matrix
     figure('Name', 'Confusion Matrix - SVM_BuiltIn tanpa PCA');
     confusionchart(labelTest_Numerika, ypred_noPCA, ...
-        'Title', 'SVM tanpa PCA (RBF)', ...
+        'Title', 'SVM BuiltIn tanpa PCA (RBF)', ...
         'RowSummary', 'row-normalized', ...
         'ColumnSummary', 'column-normalized');
     
 
     figure('Name', 'Confusion Matrix - SVM_BuiltIn dengan PCA');
     confusionchart(labelTest_Numerika, ypred_PCA, ...
-        'Title', 'SVM dengan PCA (RBF)', ...
+        'Title', 'SVM BuiltIn dengan PCA (RBF)', ...
         'RowSummary', 'row-normalized', ...
         'ColumnSummary', 'column-normalized');
 
     %Bar Chart Akurasi
     figure('Name', 'Perbandingan Akurasi SVM_BuiltIn');
     bar([accuracy_noPCA, accuracy_PCA; akurasi_noPCA, akurasi_PCA]);
-    title('Perbandingan Akurasi SVM');
+    title('Perbandingan Akurasi SVM BuiltIn');
     xlabel('Skenario');
     ylabel('Akurasi (%)');
     xticklabels({'Train', 'Test'});

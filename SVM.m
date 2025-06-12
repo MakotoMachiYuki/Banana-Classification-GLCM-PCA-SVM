@@ -51,7 +51,7 @@ function SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, label
 
     figure('Name', 'Perbandingan Akurasi SVM Kustom');
     bar([accTrain_noPCA, accTrain_PCA; accTest_noPCA, accTest_PCA]);
-    title('Perbandingan Akurasi SVM');
+    title('Perbandingan Akurasi Custom SVM');
     xlabel('Skenario');
     ylabel('Akurasi (%)');
     xticklabels({'Train', 'Test'});
