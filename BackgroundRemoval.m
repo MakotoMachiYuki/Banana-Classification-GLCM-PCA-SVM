@@ -57,4 +57,3 @@ for i = 1:numel(kelasFolder)
     end
 end
 
-disp("Background removal selesai.");
