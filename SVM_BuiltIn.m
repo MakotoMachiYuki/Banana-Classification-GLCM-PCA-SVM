@@ -1,8 +1,8 @@
 function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika)
 
     %Hyperparameters
-    sigma = 1; 
-    C = 1.0;
+    sigma = 1.0; 
+    C = 1;
     maxIter = 100;
     
     %Template SVM dengan Gaussian (RBF) kernel
@@ -14,28 +14,27 @@ function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASI
     'IterationLimit', maxIter ...
     );
 
-    classNames = {'overripe', 'ripe', 'rotten', 'unripe'};
+    namaKelas = {'overripe', 'ripe', 'rotten', 'unripe'};
 
     %SVM tanpa PCA
-    SVMModel_noPCA = fitcecoc(DataTrain_STD, labelTrain_Numerika, 'Learners', t);
-    CVSVM_noPCA = crossval(SVMModel_noPCA, 'KFold', 5);
-    loss_noPCA = kfoldLoss(CVSVM_noPCA);
-    accuracy_noPCA = (1 - loss_noPCA) * 100;
-    disp(['Akurasi Training SVM_BuiltIn tanpa PCA (RBF): ', num2str(accuracy_noPCA, '%.2f'), '%']);
+    model_no_PCA = fitcecoc(DataTrain_STD, labelTrain_Numerika, 'Learners', t);
+    CVSV_no_PCA = crossval(model_no_PCA, 'KFold', 5);
+    loss_no_PCA = kfoldLoss(CVSV_no_PCA);
+    akurasi_training_no_PCA = (1 - loss_no_PCA) * 100;
+    disp(['Akurasi Training SVM_BuiltIn tanpa PCA (RBF): ', num2str(akurasi_training_no_PCA, '%.2f'), '%']);
 
     %SVM dengan PCA ---
-    SVMModel_PCA = fitcecoc(PCA_TRAIN_HASIL, labelTrain_Numerika, 'Learners', t);
-    CVSVM_PCA = crossval(SVMModel_PCA, 'KFold', 5);
+    model_PCA = fitcecoc(PCA_TRAIN_HASIL, labelTrain_Numerika, 'Learners', t);
+    CVSVM_PCA = crossval(model_PCA, 'KFold', 5);
     loss_PCA = kfoldLoss(CVSVM_PCA);
-    accuracy_PCA = (1 - loss_PCA) * 100;
-    disp(['Akurasi Training SVM_BuiltIn dengan PCA (RBF): ', num2str(accuracy_PCA, '%.2f'), '%']);
+    akurasi_training_no_PCA = (1 - loss_PCA) * 100;
+    disp(['Akurasi Training SVM_BuiltIn dengan PCA (RBF): ', num2str(akurasi_training_no_PCA, '%.2f'), '%']);
 
     
-
     %Testing tanpa PCA
-    ypred_noPCA = predict(SVMModel_noPCA, DataTest_STD);   
-    akurasi_noPCA = sum(ypred_noPCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM BuiltIn tanpa PCA (RBF): ', num2str(akurasi_noPCA, '%.2f'), '%']);
+    prediksi_testing_no_PCA = predict(model_no_PCA, DataTest_STD);   
+    akurasi_testing_no_PCA = sum(prediksi_testing_no_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
+    disp(['Akurasi Test SVM BuiltIn tanpa PCA (RBF): ', num2str(akurasi_testing_no_PCA, '%.2f'), '%']);
     
  %   predictedLabelsText = classNames(ypred_noPCA);
  %   disp(table(predictedLabelsText(:), classNames(labelTest_Numerika(:)), ...
@@ -43,33 +42,33 @@ function SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASI
    
    
     %Testing dengan PCA
-    ypred_PCA = predict(SVMModel_PCA, PCA_TEST_HASIL);
-    akurasi_PCA = sum(ypred_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
-    disp(['Akurasi Test SVM BuiltIn dengan PCA (RBF): ', num2str(akurasi_PCA, '%.2f'), '%']);
+    prediksi_testing_PCA = predict(model_PCA, PCA_TEST_HASIL);
+    akurasi_testing_PCA = sum(prediksi_testing_PCA == labelTest_Numerika) / length(labelTest_Numerika) * 100;
+    disp(['Akurasi Test SVM BuiltIn dengan PCA (RBF): ', num2str(akurasi_testing_PCA, '%.2f'), '%']);
     
     
     %Label untuk confusion matrix
-    labelTest_Numerika = categorical(labelTest_Numerika, 1:numel(classNames), classNames);
-    ypred_noPCA = categorical(ypred_noPCA, 1:numel(classNames), classNames);
-    ypred_PCA   = categorical(ypred_PCA,   1:numel(classNames), classNames);
+    labelTest_Numerika = categorical(labelTest_Numerika, 1:numel(namaKelas), namaKelas);
+    label_prediksi_no_PCA = categorical(prediksi_testing_no_PCA, 1:numel(namaKelas), namaKelas);
+    label_prediksi_PCA   = categorical(prediksi_testing_PCA,   1:numel(namaKelas), namaKelas);
 
     %Confusion Matrix
     figure('Name', 'Confusion Matrix - SVM_BuiltIn tanpa PCA');
-    confusionchart(labelTest_Numerika, ypred_noPCA, ...
+    confusionchart(labelTest_Numerika, label_prediksi_no_PCA, ...
         'Title', 'SVM BuiltIn tanpa PCA (RBF)', ...
         'RowSummary', 'row-normalized', ...
         'ColumnSummary', 'column-normalized');
     
 
     figure('Name', 'Confusion Matrix - SVM_BuiltIn dengan PCA');
-    confusionchart(labelTest_Numerika, ypred_PCA, ...
+    confusionchart(labelTest_Numerika, label_prediksi_PCA, ...
         'Title', 'SVM BuiltIn dengan PCA (RBF)', ...
         'RowSummary', 'row-normalized', ...
         'ColumnSummary', 'column-normalized');
 
     %Bar Chart Akurasi
     figure('Name', 'Perbandingan Akurasi SVM_BuiltIn');
-    bar([accuracy_noPCA, accuracy_PCA; akurasi_noPCA, akurasi_PCA]);
+    bar([akurasi_training_no_PCA, akurasi_training_no_PCA; akurasi_testing_no_PCA, akurasi_testing_PCA]);
     title('Perbandingan Akurasi SVM BuiltIn');
     xlabel('Skenario');
     ylabel('Akurasi (%)');
