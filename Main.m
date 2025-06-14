@@ -2,8 +2,8 @@ clear; clc; close all;
 
 
 % Inisialisasi variabel
-%Untuk split data train/test, 0.6 = 60% train dan 40% test
-splitMargin = 0.6;
+%Untuk split data train/test
+splitMargin = 0.8;
 
 %Total gambar yang akan di background removal sebagai data utama
 maximumTotalGambar = 1000;
@@ -19,7 +19,7 @@ variance = 0.91;
 %Jika sudah remove, bisa di comment saja function background removalnya
 disp("Background Removal...");
 timeStart = tic;
-BackgroundRemoval(maximumGambarPerKelas);
+%BackgroundRemoval(maximumGambarPerKelas);
 timeEnd = toc(timeStart);
 
 disp("Background removal selesai.");
@@ -38,31 +38,17 @@ disp("Waktu Extrasi GLCM: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 
 disp("PCA...");
 timeStart = tic;
-[DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika] = PCA(variance);
+[DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika] = PCA(variance, splitMargin);
 timeEnd = toc(timeStart);
 
 disp("PCA Selesai");
 disp("Waktu Reduksi PCA: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 
-
-% SVM
-
-disp("SVM_BuiltIn...");
+disp("SVM ...")
 timeStart = tic;
-SVM_BuiltIn(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
+SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika, splitMargin);
 timeEnd = toc(timeStart);
 
 disp("SVM Selesai");
-disp("Waktu SVM_BuiltIn: " + string(seconds(timeEnd)), 'mm:ss.SSS');
-
-disp("---------------------------------------------------------------")
-
-
-disp("SVM Kustom...")
-timeStart = tic;
-SVM(DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika);
-timeEnd = toc(timeStart);
-
-disp("SVM Kustom Selesai");
-disp("Waktu SVM: " + string(seconds(timeEnd)), 'mm:ss.SSS');
+disp("Waktu Total SVM: " + string(seconds(timeEnd)), 'mm:ss.SSS');
 

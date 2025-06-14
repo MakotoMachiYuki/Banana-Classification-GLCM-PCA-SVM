@@ -61,7 +61,6 @@ function GLCM(splitMargin, totalGambarPerKelas)
     %Memasukan hasil extrasi kedalam file csv train
     tabelTrain = cell2table(dataTrain, 'VariableNames', ...
         {'Nama', 'Kontras', 'Korelasi', 'Energi', 'Homogenitas', ...
-        'Red', 'Green', 'Blue', ...
         'Hue', 'Saturasi', 'Value', ...
         'Kelas'});
     
@@ -76,7 +75,6 @@ function GLCM(splitMargin, totalGambarPerKelas)
     
     tabelTest = cell2table(dataTest, 'VariableNames', ...
     {'Nama', 'Kontras', 'Korelasi', 'Energi', 'Homogenitas', ...
-    'Red', 'Green', 'Blue', ...
     'Hue', 'Saturasi', 'Value', ['' ...
     'Kelas']});
     
@@ -107,12 +105,7 @@ function [row, namaGambar, features] = extractFeatures(fileStruct, folder)
     correlation = stats.Correlation;
     energy = stats.Energy;
     homogeneity = stats.Homogeneity;
-    
-    % Mean dari RGB
-    Rmean = mean2(gambar(:,:,1));
-    Gmean = mean2(gambar(:,:,2));
-    Bmean = mean2(gambar(:,:,3));
-    
+        
     % Mean dari HSV
     hsvImg = rgb2hsv(gambar);
     Hmean = mean2(hsvImg(:,:,1));
@@ -121,7 +114,6 @@ function [row, namaGambar, features] = extractFeatures(fileStruct, folder)
     
     row = {namaGambar};
     features = {contrast, correlation, energy, homogeneity, ...
-                Rmean, Gmean, Bmean, ...
                 Hmean, Smean, Vmean};
 end
 

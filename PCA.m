@@ -1,10 +1,12 @@
-function [DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika] = PCA(variance)
+function [DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTrain_Numerika, labelTest_Numerika] = PCA(variance, splitMargin)
 
     tabelTrain = readtable("fitur_train.csv");
     tabelTest = readtable("fitur_test.csv");
 
-    X_Train = table2array(tabelTrain(:, 2:10));
-    X_Test  = table2array(tabelTest(:, 2:10));
+
+    %Menggunakan 4 fitur GLCM + 3 fitur HSV
+    X_Train = table2array(tabelTrain(:, 2:8));
+    X_Test  = table2array(tabelTest(:, 2:8));
 
     [n_train, p] = size(X_Train);
     [n_test, ~]  = size(X_Test);
@@ -89,6 +91,12 @@ function [DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTra
     labelTrain_Numerika = grp2idx(labelTrain_Kelas);
     labelTest_Numerika  = grp2idx(labelTest_Kelas);
 
+    %Pernamaan splitPersen dalam plotting
+    splitPersen1 = splitMargin * 100;
+    splitPersen2 = 100 - splitPersen1;
+    titlePCA2D = [' PCA 2D: ', num2str(splitPersen1), '% Train / ', num2str(splitPersen2), '% Test'];
+    titlePCA3D = ['PCA 3D: ', num2str(splitPersen1), '% Train / ', num2str(splitPersen2), '% Test'];
+
     warnaKelas = [
         43 43 12.;     % overripe (hitam)
         255 255 0.;    % ripe (kuning)
@@ -105,7 +113,7 @@ function [DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTra
         scatter(PCA_TRAIN_HASIL(idx,1), PCA_TRAIN_HASIL(idx,2), ...
             10, warnaKelas(i,:), 'filled', 'DisplayName', labelTrain_KelasUnik{i});
     end
-    title('PCA 2D');
+    title(titlePCA2D);
     xlabel('PC 1'); ylabel('PC 2');
     grid on; axis equal; legend('Location', 'best');
 
@@ -118,7 +126,7 @@ function [DataTrain_STD, DataTest_STD, PCA_TRAIN_HASIL, PCA_TEST_HASIL, labelTra
             scatter3(PCA_TRAIN_HASIL(idx,1), PCA_TRAIN_HASIL(idx,2), PCA_TRAIN_HASIL(idx,3), ...
                 10, warnaKelas(i,:), 'filled', 'DisplayName', labelTrain_KelasUnik{i});
         end
-        title('PCA 3D');
+        title(titlePCA3D);
         xlabel('PC 1'); ylabel('PC 2'); zlabel('PC 3');
         grid on; axis equal;
         view(45, 25);
